@@ -1,5 +1,5 @@
 "use strict"
-const format  = require('../library/format');
+const format  = require('../lib/format');
 const cosjs_redis   = require('./index');
 
 module.exports = class redis_hash extends cosjs_redis{
