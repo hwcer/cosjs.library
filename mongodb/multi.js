@@ -19,7 +19,7 @@ MultiColl.prototype.insert = function(data,option,callback){
 
 MultiColl.prototype.update = function(query,update,option,callback){
     callback = callback || mongodb_callback;
-    var upsert = option['upsert'] ? true : false;
+    let upsert = option['upsert'] ? true : false;
     if(!option['multi']){
         this._MultiCache.push({ updateOne: { filter: query , update : update ,upsert : upsert  } } );
     }
