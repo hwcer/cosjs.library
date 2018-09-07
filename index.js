@@ -1,7 +1,7 @@
 ﻿"use strict";
-const loader = require('cosjs.loader')(__dirname + '/lib',true);
+const loader = require('cosjs.loader')(__dirname + '/lib');
 
-module.exports = function(name){
+function library(name){
     let fun = loader.parse(name);
     if(!fun){
         throw new Error(`library[${name}] not exist`);
@@ -15,10 +15,24 @@ module.exports = function(name){
 }
 
 
+module.exports = library
+
 module.exports.loader = loader;
 
 module.exports.require = loader.require.bind(loader)
 
+module.exports.namespace = function(name){
+    if(!name){
+        throw new Error("namespace name empty");
+    }
+    if(module.exports[name]){
+        return;
+    }
+    module.exports[name] = function(){
+        arguments[0] = [name,arguments].join('/')
+        return library.apply(this,arguments);
+    }
+}
 
 
 if (!Object.values) {
@@ -57,8 +71,7 @@ JSON.clone = function json_clone(v){
 
 //对象合并
 JSON.extend = function json_extend() {
-    var options, name, src, copy, clone,
-        target = arguments[0] || {},
+        let target = arguments[0] || {},
         i = 1,
         length = arguments.length,
         deep = false;
@@ -66,7 +79,6 @@ JSON.extend = function json_extend() {
     // Handle a deep copy situation
     if ( typeof target === "boolean" ) {
         deep = target;
-
         // skip the boolean and the target
         target = arguments[ i ] || {};
         i++;
@@ -78,12 +90,13 @@ JSON.extend = function json_extend() {
     }
 
     for ( ; i < length; i++ ) {
+        let options;
         // Only deal with non-null/undefined values
         if ( (options = arguments[ i ]) != null ) {
             // Extend the base object
-            for ( name in options ) {
-                src = target[ name ];
-                copy = options[ name ];
+            for ( let name in options ) {
+                let src = target[ name ];
+                let copy = options[ name ];
                 // Prevent never-ending loop
                 if ( target === copy ) {
                     continue;
@@ -91,6 +104,7 @@ JSON.extend = function json_extend() {
 
                 // Recurse if we're merging plain objects or arrays
                 if ( deep && copy && typeof copy == 'object' ) {
+                    let clone;
                     if ( Array.isArray(copy)  ) {
                         clone = src && Array.isArray(src) ? src : [];
 
