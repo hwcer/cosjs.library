@@ -1,8 +1,13 @@
-cosjs.loader
+cosjs.library
 
 Install with:
 
-    npm install cosjs.loader
+    npm install cosjs.library
+
+
+    常使用的类库
+
+
 
 
 

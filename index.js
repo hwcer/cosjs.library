@@ -1,45 +1,15 @@
 ﻿"use strict";
-const loader = require('cosjs.loader')(__dirname + '/lib');
+const cosjs_loader = require('cosjs.loader');
 
-function library(name){
-    let fun = loader.parse(name);
-    if(!fun){
-        throw new Error(`library[${name}] not exist`);
-    }
-    if(typeof fun === 'function'){
-        return fun.apply(this,Array.prototype.slice.call(arguments,1) );
-    }
-    else{
-        return fun;
-    }
-}
+module.exports = cosjs_loader.package(__dirname + '/lib');
 
-
-module.exports = library
-
-module.exports.loader = loader;
-
-module.exports.require = loader.require.bind(loader)
-
-module.exports.namespace = function(name){
-    if(!name){
-        throw new Error("namespace name empty");
-    }
-    if(module.exports[name]){
-        return;
-    }
-    module.exports[name] = function(){
-        arguments[0] = [name,arguments].join('/')
-        return library.apply(this,arguments);
-    }
-}
-
+console.debug = require('./lib/debug');
 
 if (!Object.values) {
     Object.values = function(obj) {
         if (obj !== Object(obj))
             throw new TypeError('Object.values called on a non-object');
-        var val=[],key;
+        let val=[],key;
         for (key in obj) {
             if (Object.prototype.hasOwnProperty.call(obj,key)) {
                 val.push(obj[key]);
@@ -49,7 +19,62 @@ if (!Object.values) {
     }
 }
 
+if (!Object.from) {
+    Object.from = function(obj) {
+        let arr,ret = {};
+        if(!obj || typeof obj !== 'object'){
+            return ret;
+        }
+        if(Array.isArray(arguments[1])){
+            arr = arguments[1];
+        }
+        else {
+            arr = Array.from(arguments);
+            arr.shift();
+        }
+        for(let k of arr){
+            ret[k] = obj[k];
+        }
+        return ret;
+    }
+}
+//Math.roll(1,100);
+if (!Math.roll) {
+    Math.roll = function () {
+        let min,max;
+        if (arguments.length > 1) {
+            min = arguments[0];max = arguments[1];
+        }
+        else {
+            min = 1;max = arguments[0];
+        }
+        if (min >= max) {
+            return max;
+        }
+        let key = max - min + 1;
+        let val = min + Math.floor(Math.random() * key);
+        return val;
+    }
+}
 
+if (!Array.random) {
+    Array.random = function (arr) {
+        let i = Math.roll(0,arr.length -1);
+        return arr[i]||null;
+    }
+}
+
+Map.prototype.toJSON = function(){
+    let J = {};
+    for(let [k,v] of  this){
+        J[k] = v;
+    }
+    return J;
+}
+
+Set.prototype.toJSON = function(){
+    return Array.from(this);
+}
 
 JSON.tryParse = function json_parse(text,reviver){
     if( !text || typeof text == 'object'){
@@ -113,7 +138,7 @@ JSON.extend = function json_extend() {
                     }
 
                     // Never move original objects, clone them
-                    target[ name ] = Object.extend( deep, clone, copy );
+                    target[ name ] = JSON.extend( deep, clone, copy );
 
                     // Don't bring in undefined values
                 } else if ( copy !== undefined ) {
